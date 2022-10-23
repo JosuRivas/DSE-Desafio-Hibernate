@@ -1,12 +1,9 @@
 package com.tienda.app;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.swing.JOptionPane;
+
+import org.hibernate.Session;
 
 import com.tienda.model.Producto;
 
@@ -16,7 +13,7 @@ public class MainApp {
 		int opcion = 0;
 		Producto producto;
 
-		EntityManager entity = JPAUtil.getEntityManagerFactory().createEntityManager();
+		Session session = HibernateUtil.getSessionFactory().openSession();
 		while (opcion!=5) {
 			
 			opcion = Integer.parseInt(JOptionPane.showInputDialog(""
@@ -37,9 +34,10 @@ public class MainApp {
 				producto.setCantidad(Integer.parseInt(JOptionPane.showInputDialog("Cantidad del producto: ")));
 				producto.setPrecio(Double.parseDouble(JOptionPane.showInputDialog("Precio del producto: ")));
 	
-				entity.getTransaction().begin();
-				entity.persist(producto);
-				entity.getTransaction().commit();
+				session.getTransaction().begin();
+				session.persist(producto);
+				session.getTransaction().commit();
+				
 				JOptionPane.showMessageDialog(null, "Producto ingresado: "
 						+ "Nombre: " + producto.getNombre() + "\n"
 						+ "Categoria: " + producto.getCategoria() + "\n"
@@ -50,8 +48,8 @@ public class MainApp {
 
 			case 2:
 				producto = new Producto();
+				producto = session.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Digite el ID del producto a buscar:")));
 				
-				producto = entity.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Digite el ID del producto a buscar:")));
 				if (producto != null) {
 					JOptionPane.showMessageDialog(null, "Producto encontrado: "
 							+ "Nombre: " + producto.getNombre() + "\n"
@@ -67,8 +65,8 @@ public class MainApp {
 				break;
 			case 3:
 				producto = new Producto();
-
-				producto = entity.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Digite el ID del producto que desea actualizar:")));
+				producto = session.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Digite el ID del producto que desea actualizar:")));
+				
 				if (producto != null) {
 					JOptionPane.showMessageDialog(null, "Producto encontrado: " + producto.getNombre());
 					
@@ -87,9 +85,9 @@ public class MainApp {
 					producto.setPrecio(Double.parseDouble(JOptionPane.showInputDialog("Precio actual: " + producto.getPrecio() + "\n\n"
 							+ "Nuevo precio: ")));
 					
-					entity.getTransaction().begin();
-					entity.merge(producto);
-					entity.getTransaction().commit();
+					session.getTransaction().begin();
+					session.merge(producto);
+					session.getTransaction().commit();
 					
 					JOptionPane.showMessageDialog(null, "Producto actualizado");
 				} else {
@@ -99,18 +97,19 @@ public class MainApp {
 			case 4:
 				producto = new Producto();
 
-				producto = entity.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Ingrese el ID del producto que desea eliminar: ")));
+				producto = session.find(Producto.class, Long.parseLong(JOptionPane.showInputDialog("Ingrese el ID del producto que desea eliminar: ")));
 				if (producto != null) {
 					JOptionPane.showMessageDialog(null, "Producto encontrado: " + producto.getNombre());
-					entity.getTransaction().begin();
-					entity.remove(producto);
-					entity.getTransaction().commit();
+					session.getTransaction().begin();
+					session.remove(producto);
+					session.getTransaction().commit();
 					JOptionPane.showMessageDialog(null, "Producto eliminado");
 				} else {
 					JOptionPane.showMessageDialog(null, "Producto no encontrado");
 				}
 				break;
-			case 5:entity.close();JPAUtil.shutdown();
+			case 5:
+				session.close();
 			break;
 
 			default:
